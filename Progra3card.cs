@@ -8,7 +8,7 @@ namespace Progra3Card.Administrativo
 {
     class Program
     {
-        private static string connectionString = "Server=localhost;Database=mi_banco_db;Uid=root;Pwd=;";
+        private static string connectionString = "Server=localhost;Database=mi_banco_db;Uid=root;Pwd=root;";
 
         static void Main(string[] args)
         {
@@ -120,7 +120,84 @@ namespace Progra3Card.Administrativo
 
         static void MenuEmitirLiquidacion()
         {
-            Console.WriteLine("Falta Hacer");
+            Console.Clear();
+            Console.WriteLine("=== EMITIR LIQUIDACION ===");
+            Console.Write("Ingrese el Número de Cuenta a la cual se le emitira una liquidacion nueva: ");
+            int numCuenta = Convert.ToInt32(Console.ReadLine());
+
+            using(MySqlConnection conexion = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conexion.Open();
+
+                    string query = "SELECT estado FROM tarjetas WHERE num_cuenta = @numCuenta";
+                    string estado ="";
+                    bool cliente_encontrado = false;
+
+                    using(MySqlCommand comando = new MySqlCommand(query,conexion))
+                    {
+                        comando.Parameters.AddWithValue("@numCuenta",numCuenta);
+
+                        using(MySqlDataReader lector = comando.ExecuteReader())
+                        {
+                            if(lector.Read())
+                            {
+                                cliente_encontrado = true;
+                                estado = lector["estado"].ToString()??"";
+                            }
+                        }
+                    }
+
+                    if(cliente_encontrado == false)
+                    {
+                        Console.WriteLine("\nEl numero de cuenta no existe!!! Pulse para continuar...");
+                        Console.ReadKey();
+                    }
+                    else if (estado == "Bloqueada")
+                    {
+                        Console.WriteLine("\nNo se puede emitir una liquidacion a una tarjeta bloqueada. Pulse para continuar...");
+                        Console.ReadKey();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Periodo (YYYY-MM): ");
+                        string periodo = Console.ReadLine()?? "";
+                        Console.WriteLine("Fecha de Vencimiento (YYYY-MM-DD): ");
+                        string fecha_input = Console.ReadLine()?? "";
+                        DateTime fecha_vencimiento = Convert.ToDateTime(fecha_input);
+                        Console.WriteLine("Total a pagar: ");
+                        decimal total_a_pagar = Convert.ToDecimal(Console.ReadLine());
+                        Console.WriteLine("Pago minimo: ");
+                        decimal pago_minimo = Convert.ToDecimal(Console.ReadLine());
+
+                       query = "INSERT INTO liquidaciones (num_cuenta, periodo, fecha_vencimiento, total_a_pagar, pago_minimo) VALUES (@num_cuenta, @periodo, @fecha_vencimiento, @total_a_pagar, @pago_minimo)";
+
+                        using(MySqlCommand comando1 = new MySqlCommand(query, conexion))
+                        {
+                            comando1.Parameters.AddWithValue("@num_cuenta",numCuenta);
+                            comando1.Parameters.AddWithValue("@periodo",periodo);
+                            comando1.Parameters.AddWithValue("@fecha_vencimiento",fecha_vencimiento);
+                            comando1.Parameters.AddWithValue("@total_a_pagar",total_a_pagar);
+                            comando1.Parameters.AddWithValue("@pago_minimo",pago_minimo);
+
+                            int filasLiquidacion = comando1.ExecuteNonQuery();
+
+                            if (filasLiquidacion > 0)
+                            {
+                                Console.WriteLine("\nNueva liquidacion cargada al nro de cuenta "+numCuenta);
+                                Console.WriteLine("\nPulse para continuar...");
+                                Console.ReadKey();
+                            }
+                        }
+                    }
+
+                } catch(Exception ex)
+                {
+                    Console.WriteLine("Ocurrio un error...");
+                }
+
+            }
         }
         // =========================================================================
         // MÉTODOS BASE QUE DEBEN COMPLETAR CON LA LÓGICA 
@@ -133,7 +210,7 @@ namespace Progra3Card.Administrativo
             Console.WriteLine("=== DATOS NUEVO CLIENTE ===");
             Console.WriteLine("Nro. Documento/Pasaporte (Sin puntos): ");
             string documento = Console.ReadLine()?? "";
-            Console.WriteLine("Tipo documento (DNI o PASAPORTE: ");
+            Console.WriteLine("Tipo documento (DNI o PASAPORTE): ");
             string tipo_doc = Console.ReadLine()?? "";
             Console.WriteLine("Nombre: ");
             string nombre = Console.ReadLine()?? "";
@@ -173,6 +250,7 @@ namespace Progra3Card.Administrativo
                 {
                     Console.WriteLine("Ocurrio un error al dar de alta al cliente");
                     Console.WriteLine(ex.Message);
+                    Console.ReadKey();
                 }
             }
 
@@ -206,11 +284,13 @@ namespace Progra3Card.Administrativo
             string saldo = Console.ReadLine()?? "";
             Console.WriteLine("Titular: " + documento);
             string dni_titular = documento;
+            Console.WriteLine("Se cargara la tarjeta al cliente "+ documento);
 
             using(MySqlConnection conexion = new MySqlConnection(connectionString))
             {
                 try
-                {
+                {   
+                    conexion.Open();
                     string query = "INSERT INTO tarjetas (numero_tarjeta, banco_emisor, estado, saldo, dni_titular) VALUES (@numero_tarjeta, @banco_emisor, @estado, @saldo, @dni_titular)";
 
                     using(MySqlCommand comando = new MySqlCommand(query,conexion))
@@ -225,7 +305,8 @@ namespace Progra3Card.Administrativo
 
                         if(filasCargadas > 0)
                         {
-                            Console.WriteLine("\nTarjeta creada con exito");
+                            Console.WriteLine("\nTarjeta creada con exito, pulse para continuar...");
+                            Console.ReadKey();
                         }
                     }
 
@@ -234,6 +315,7 @@ namespace Progra3Card.Administrativo
                 {   
                     Console.WriteLine("Ocurrio un error al dar de alta la tarjeta");
                     Console.WriteLine(ex.Message);
+                    Console.ReadKey();
                 }
             }
 
@@ -243,16 +325,111 @@ namespace Progra3Card.Administrativo
             // Completar 
             // Ejemplo de impresión dentro del bucle: 
             // Console.WriteLine("{0,-12} {1,-18} {2,-20} {3,-15}", reader["num_cuenta"], reader["numero_tarjeta"], ...);
+
+            using (MySqlConnection conexion = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conexion.Open();
+                    string query = "SELECT num_cuenta, numero_tarjeta, banco_emisor, dni_titular FROM tarjetas";
+
+                    using (MySqlCommand comando = new MySqlCommand(query, conexion))
+                    {
+                        using(MySqlDataReader lector = comando.ExecuteReader())
+                        {
+                            while(lector.Read())
+                            {
+                               // string num_cuenta = lector["num_cuenta"].ToString()??"";
+                               // string numero_tarjeta = lector["numero_tarjeta"].ToString()??"";
+                               // string banco_emisor = lector["banco_emisor"].ToString()??"";
+                               // string dni_titular = lector["dni_titular"].ToString()??"";
+
+                                Console.WriteLine("{0,-12} {1,-18} {2,-20} {3,-15}", lector["num_cuenta"], lector["numero_tarjeta"], lector["banco_emisor"], lector["dni_titular"]);
+                                //funciona sin el signo $ y las {} ¿?¿? 
+                            }
+                        }
+
+                    }
+                }
+                catch
+                {
+
+                }
+            }
         }
 
         static void MostrarDetalleCompleto(int cuenta)
         {
             // Completar haciendo un SELECT con JOIN de usuarios y tarjetas WHERE num_cuenta = @cuenta
+
+            using (MySqlConnection conexion = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conexion.Open();
+                    string query = "SELECT * FROM usuarios u JOIN tarjetas t ON u.documento = t.dni_titular WHERE t.num_cuenta = @cuenta";
+
+                    using (MySqlCommand comando = new MySqlCommand(query,conexion))
+                    {
+                        comando.Parameters.AddWithValue("@cuenta",cuenta);
+
+                        using (MySqlDataReader lector = comando.ExecuteReader())
+                        {
+                            if(lector.Read())
+                            {
+                                Console.WriteLine("Numero de cuenta: " + lector["num_cuenta"]);
+                                Console.WriteLine("Apellido: " + lector["apellido"]);
+                                Console.WriteLine("Nombre: " + lector["nombre"]);
+                                Console.WriteLine("DNI (cliente/titular tarjeta): " + lector["documento"]);
+                                Console.WriteLine("Numero de tarjeta: " + lector["numero_tarjeta"]);
+                                Console.WriteLine("Banco emiso: " + lector["banco_emisor"]);
+                                Console.WriteLine("Estado: " + lector["estado"]);
+                                Console.WriteLine("Saldo: " + lector["saldo"]);
+                            }
+                            else
+                            {
+                                Console.WriteLine("No se encontro ninguna tarjeta para el nro de cliente "+ cuenta);
+                                Console.ReadKey();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Ocurrio un error...");
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         static bool DarDeBajaTarjeta(int cuenta)
         {
             // Completar usando un DELETE FROM tarjetas WHERE num_cuenta = @cuenta
+            using (MySqlConnection conexion = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conexion.Open();
+                    string query = "DELETE FROM tarjetas WHERE num_cuenta = @cuenta";
+
+                    using(MySqlCommand comando = new MySqlCommand(query,conexion))
+                    {
+                        comando.Parameters.AddWithValue("@cuenta", cuenta);
+
+                        int clienteEliminado = comando.ExecuteNonQuery();
+
+                        if(clienteEliminado > 0)
+                        {
+                            return true;
+                        }
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Ocurrio un error...");
+                }
+            }
             return false;
         }
     }

@@ -35,3 +35,4 @@ D:\MAMP\htdocs\TP\TP_Prog3\Progra3Card\obj\Debug\net8.0\refint\Progra3Card.dll
 D:\MAMP\htdocs\TP\TP_Prog3\Progra3Card\obj\Debug\net8.0\Progra3Card.pdb
 D:\MAMP\htdocs\TP\TP_Prog3\Progra3Card\obj\Debug\net8.0\Progra3Card.genruntimeconfig.cache
 D:\MAMP\htdocs\TP\TP_Prog3\Progra3Card\obj\Debug\net8.0\ref\Progra3Card.dll
+D:\MAMP\htdocs\TP\TP_Prog3\Progra3Card\obj\Debug\net8.0\Progra3Card.sourcelink.json
