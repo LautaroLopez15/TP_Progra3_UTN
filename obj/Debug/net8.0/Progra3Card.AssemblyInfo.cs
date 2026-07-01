@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Progra3Card")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d960bcc27893071f0995220bfe29ab280dfb330a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7688543ad50197ac4fcf1d4841b0dd5ec1f257fd")]
 [assembly: System.Reflection.AssemblyProductAttribute("Progra3Card")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Progra3Card")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
